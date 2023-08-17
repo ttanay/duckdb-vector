@@ -97,10 +97,50 @@ struct L2Distance {
 	}
 };
 
+struct DotProductDistance {
+	struct State {
+		double val;
+	};
+
+	struct Function {
+		template <class STATE>
+		static void Initialize(STATE &state) {
+			state.val = 0;
+		}
+
+		template <class A_TYPE, class B_TYPE, class STATE, class OP>
+		static void Operation(STATE &state, const A_TYPE &x_input, const B_TYPE &y_input, AggregateBinaryInput &idata) {
+			state.val += x_input * y_input;
+		}
+
+		template <class STATE, class OP>
+		static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
+			target.val += source.val;
+		}
+
+		template <class T, class STATE>
+		static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
+			target = state.val;
+		}
+
+		static bool IgnoreNull() {
+			return false;
+		}
+	};
+
+	static AggregateFunction GetFunction() {
+		auto fn = AggregateFunction::BinaryAggregate<State, double, double, double, Function>(
+		    LogicalType(LogicalTypeId::DOUBLE), LogicalType(LogicalTypeId::DOUBLE), LogicalType::DOUBLE);
+		fn.name = "dot_product";
+		return fn;
+	}
+};
+
 vector<AggregateFunction> ListDistanceAlgorithms::GetAlgorithms() {
 	vector<AggregateFunction> algorithms;
 	algorithms.push_back(L2Norm::GetFunction());
 	algorithms.push_back(L2Distance::GetFunction());
+	algorithms.push_back(DotProductDistance::GetFunction());
 	return algorithms;
 }
 
