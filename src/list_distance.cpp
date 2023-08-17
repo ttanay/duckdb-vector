@@ -123,18 +123,14 @@ static void ListDistanceFunction(DataChunk &args, ExpressionState &state, Vector
 	UnifiedVectorFormat l_data;
 	UnifiedVectorFormat search_l_data;
 	l.ToUnifiedFormat(count, l_data);
-	search_l.ToUnifiedFormat(count, search_l_data);
 	auto l_entries = UnifiedVectorFormat::GetData<list_entry_t>(l_data);
-	auto search_l_entries = UnifiedVectorFormat::GetData<list_entry_t>(search_l_data);
 
 	auto l_list_size = ListVector::GetListSize(l);
 	auto search_l_list_size = ListVector::GetListSize(search_l);
 	auto &l_child = ListVector::GetEntry(l);
 	auto &search_l_child = ListVector::GetEntry(search_l);
 	UnifiedVectorFormat l_child_data;
-	UnifiedVectorFormat search_l_child_data;
 	l_child.ToUnifiedFormat(l_list_size, l_child_data);
-	search_l_child.ToUnifiedFormat(search_l_list_size, search_l_child_data);
 
 	// state_buffer holds the state for each list of this chunk
 	idx_t size = aggr.function.state_size();
@@ -149,7 +145,7 @@ static void ListDistanceFunction(DataChunk &args, ExpressionState &state, Vector
 	auto states_update = FlatVector::GetData<data_ptr_t>(state_vector_update);
 
 	// // Get the first index of the search_l since there won't be any others
-	// D_ASSERT(search_l.length == 1);
+	D_ASSERT(search_l.length == 1);
 
 	for (idx_t i = 0; i < count; i++) {
 		// initialize the state for this list
@@ -180,7 +176,6 @@ static void ListDistanceFunction(DataChunk &args, ExpressionState &state, Vector
 			if (states_idx == STANDARD_VECTOR_SIZE) {
 				// Do the update and reset the states_idx
 				Vector l_slice(l_child, l_sel_vector, states_idx);
-				// Vector search_l_slice(search_l_child, search_l_sel_vector, states_idx);
 				Vector inputs[] = {l_slice, search_l_child};
 				aggr.function.update(inputs, aggr_input_data, 2, state_vector_update, states_idx);
 
@@ -196,7 +191,6 @@ static void ListDistanceFunction(DataChunk &args, ExpressionState &state, Vector
 
 		if (states_idx != 0) {
 			Vector l_slice(l_child, l_sel_vector, states_idx);
-			// Vector search_l_slice(search_l_child, search_l_sel_vector, states_idx);
 			Vector inputs[] = {l_slice, search_l_child};
 			aggr.function.update(inputs, aggr_input_data, 2, state_vector_update, states_idx);
 		}
