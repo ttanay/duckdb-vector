@@ -3,9 +3,9 @@ A duckdb extension to add support for vectors([not the duckdb internal represent
 
 ## Vector Distance
 This extension adds support for vector distances using the function `list_distance`.
-The third argument to this function is the distance algorithm to be used.   
+The third argument to this function is the distance algorithm to be used.
 Note: The distance algorithm should be a binary aggregate.
-Eg: 
+Eg:
 ```sql
 SELECT list_distance([1, 1, 1], [1, 1, 3], 'dot_product') FROM vectors;
 ----
