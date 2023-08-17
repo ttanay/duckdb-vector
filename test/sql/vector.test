@@ -2,17 +2,29 @@
 # description: test vector extension
 # group: [vector]
 
-# Before we load the extension, this will fail
-statement error
-SELECT vector('Sam');
-----
-Catalog Error: Scalar Function with name vector does not exist!
+# prepare table
+statement ok
+CREATE TABLE vectors(v1 DOUBLE[10]);
 
-# Require statement will ensure this test is run with this extension loaded
+statement ok
+INSERT INTO vectors VALUES ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 789.0, 10.0, 11.0]), ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 181.0, 10.0, 10.0]);
+
+# Before we load the extension, this should fail
+statement error
+SELECT v1, list_distance(v1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0], 'l2distance') AS l2distance FROM vectors;
+
 require vector
 
-# Confirm the extension works
-query I
-SELECT vector('Sam');
+# select list_distance
+query R
+SELECT list_distance(v1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0], 'l2distance') AS l2distance FROM vectors;
 ----
-Vector Sam 🐥
+4.0
+604.0008278140023
+
+# select l2norm
+query R
+SELECT list_aggr(v1, 'l2norm') FROM vectors;
+----
+789.22873743928
+181.93680221439533
