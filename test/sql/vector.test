@@ -1,0 +1,18 @@
+# name: test/sql/vector.test
+# description: test vector extension
+# group: [vector]
+
+# Before we load the extension, this will fail
+statement error
+SELECT vector('Sam');
+----
+Catalog Error: Scalar Function with name vector does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require vector
+
+# Confirm the extension works
+query I
+SELECT vector('Sam');
+----
+Vector Sam 🐥
