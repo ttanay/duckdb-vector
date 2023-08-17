@@ -32,6 +32,23 @@ SELECT list_aggr(v1, 'l2norm') FROM vectors;
 # dot_product
 query R
 SELECT list_distance(v1, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'dot_product') AS dot_product FROM vectors;
----
+----
 838.0
 229.0
+
+# cosine_distance
+query R
+SELECT list_distance([1,2],[2,3], 'cosine_distance');
+----
+0.007722123286332261
+
+# cosine_similarity
+query R
+SELECT list_distance([1,2],[2,3], 'cosine_similarity');
+----
+0.9922778767136677
+
+query R
+SELECT list_distance([1,2],[2,3], 'cosine_similarity') + list_distance([1,2],[2,3], 'cosine_distance');
+----
+1

@@ -136,11 +136,107 @@ struct DotProductDistance {
 	}
 };
 
+struct CosineDistance {
+	struct State {
+		double dot_product;
+		double a_magnitude;
+		double b_magnitude;
+	};
+
+	struct Function {
+		template <class STATE>
+		static void Initialize(STATE &state) {
+			state.dot_product = 0.0;
+			state.a_magnitude = 0.0;
+			state.b_magnitude = 0.0;
+		}
+
+		template <class A_TYPE, class B_TYPE, class STATE, class OP>
+		static void Operation(STATE &state, const A_TYPE &x_input, const B_TYPE &y_input, AggregateBinaryInput &idata) {
+			state.dot_product += x_input * y_input;
+			state.a_magnitude += x_input * x_input;
+			state.b_magnitude += y_input * y_input;
+		}
+
+		template <class STATE, class OP>
+		static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
+			target.dot_product += source.dot_product;
+			target.a_magnitude += source.a_magnitude;
+			target.b_magnitude += source.b_magnitude;
+		}
+
+		template <class T, class STATE>
+		static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
+			target = 1 - (state.dot_product / sqrt(state.a_magnitude * state.b_magnitude));
+		}
+
+		static bool IgnoreNull() {
+			return false;
+		}
+	};
+
+	static AggregateFunction GetFunction() {
+		auto fn = AggregateFunction::BinaryAggregate<State, double, double, double, Function>(
+			LogicalType(LogicalTypeId::DOUBLE), LogicalType(LogicalTypeId::DOUBLE), LogicalType::DOUBLE);
+		fn.name = "cosine_distance";
+		return fn;
+	}
+};
+
+struct CosineSimilarity {
+	struct State {
+		double dot_product;
+		double a_magnitude;
+		double b_magnitude;
+	};
+
+	struct Function {
+		template <class STATE>
+		static void Initialize(STATE &state) {
+			state.dot_product = 0.0;
+			state.a_magnitude = 0.0;
+			state.b_magnitude = 0.0;
+		}
+
+		template <class A_TYPE, class B_TYPE, class STATE, class OP>
+		static void Operation(STATE &state, const A_TYPE &x_input, const B_TYPE &y_input, AggregateBinaryInput &idata) {
+			state.dot_product += x_input * y_input;
+			state.a_magnitude += x_input * x_input;
+			state.b_magnitude += y_input * y_input;
+		}
+
+		template <class STATE, class OP>
+		static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
+			target.dot_product += source.dot_product;
+			target.a_magnitude += source.a_magnitude;
+			target.b_magnitude += source.b_magnitude;
+		}
+
+		template <class T, class STATE>
+		static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
+			target = state.dot_product / sqrt(state.a_magnitude * state.b_magnitude);
+		}
+
+		static bool IgnoreNull() {
+			return false;
+		}
+	};
+
+	static AggregateFunction GetFunction() {
+		auto fn = AggregateFunction::BinaryAggregate<State, double, double, double, Function>(
+			LogicalType(LogicalTypeId::DOUBLE), LogicalType(LogicalTypeId::DOUBLE), LogicalType::DOUBLE);
+		fn.name = "cosine_similarity";
+		return fn;
+	}
+};
+
 vector<AggregateFunction> ListDistanceAlgorithms::GetAlgorithms() {
 	vector<AggregateFunction> algorithms;
 	algorithms.push_back(L2Norm::GetFunction());
 	algorithms.push_back(L2Distance::GetFunction());
 	algorithms.push_back(DotProductDistance::GetFunction());
+	algorithms.push_back(CosineDistance::GetFunction());
+	algorithms.push_back(CosineSimilarity::GetFunction());
 	return algorithms;
 }
 
