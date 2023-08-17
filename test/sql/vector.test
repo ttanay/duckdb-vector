@@ -28,3 +28,10 @@ SELECT list_aggr(v1, 'l2norm') FROM vectors;
 ----
 789.22873743928
 181.93680221439533
+
+# dot_product
+query R
+SELECT list_distance(v1, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'dot_product') AS dot_product FROM vectors;
+---
+838.0
+229.0
