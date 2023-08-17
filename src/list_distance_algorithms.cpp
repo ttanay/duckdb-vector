@@ -233,7 +233,12 @@ struct CosineSimilarity {
 vector<AggregateFunction> ListDistanceAlgorithms::GetAlgorithms() {
 	vector<AggregateFunction> algorithms;
 	algorithms.push_back(L2Norm::GetFunction());
-	algorithms.push_back(L2Distance::GetFunction());
+	// TODO(refactor): Make aliases better
+	auto l2distance_fn = L2Distance::GetFunction();
+	algorithms.push_back(l2distance_fn);
+	l2distance_fn.name = "euclidean_distance";
+	algorithms.push_back(l2distance_fn);
+
 	algorithms.push_back(DotProductDistance::GetFunction());
 	algorithms.push_back(CosineDistance::GetFunction());
 	algorithms.push_back(CosineSimilarity::GetFunction());
