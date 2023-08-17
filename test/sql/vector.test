@@ -17,7 +17,21 @@ require vector
 
 # select list_distance
 query R
-SELECT list_distance(v1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0], 'l2distance') AS l2distance FROM vectors;
+SELECT list_distance(v1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0], 'l2distance') FROM vectors;
+----
+4.0
+604.0008278140023
+
+# euclidean_distance
+query R
+SELECT list_distance(v1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0], 'euclidean_distance') FROM vectors;
+----
+4.0
+604.0008278140023
+
+# euclidean_distance macro
+query R
+SELECT list_euclidean_distance(v1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0]) FROM vectors;
 ----
 4.0
 604.0008278140023
@@ -29,12 +43,27 @@ SELECT list_aggr(v1, 'l2norm') FROM vectors;
 789.22873743928
 181.93680221439533
 
+# l2norm macro
+query R
+SELECT list_l2norm(v1) FROM vectors;
+----
+789.22873743928
+181.93680221439533
+
 # dot_product
 query R
-SELECT list_distance(v1, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'dot_product') AS dot_product FROM vectors;
+SELECT list_distance(v1, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 'dot_product') FROM vectors;
 ----
 838.0
 229.0
+
+# dot_product macro
+query R
+SELECT list_dot_product(v1, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) FROM vectors;
+----
+838.0
+229.0
+
 
 # cosine_distance
 query R
@@ -42,9 +71,21 @@ SELECT list_distance([1,2],[2,3], 'cosine_distance');
 ----
 0.007722123286332261
 
+# cosine_distance macro
+query R
+SELECT list_cosine_distance([1,2],[2,3]);
+----
+0.007722123286332261
+
 # cosine_similarity
 query R
 SELECT list_distance([1,2],[2,3], 'cosine_similarity');
+----
+0.9922778767136677
+
+# cosine_similarity
+query R
+SELECT list_cosine_similarity([1,2],[2,3]);
 ----
 0.9922778767136677
 

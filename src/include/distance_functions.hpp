@@ -1,5 +1,6 @@
 #pragma once
 
+#include "duckdb/catalog/default/default_functions.hpp"
 #include "duckdb/function/function_set.hpp"
 
 namespace duckdb {

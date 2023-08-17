@@ -13,14 +13,27 @@
 
 namespace duckdb {
 
+static DefaultMacro vector_macros[] = {
+    {DEFAULT_SCHEMA, "list_l2norm", {"l", nullptr}, "list_aggr(l, 'l2norm')"},
+    {DEFAULT_SCHEMA, "list_euclidean_distance", {"l1", "l2", nullptr}, "list_distance(l1, l2, 'l2distance')"},
+    {DEFAULT_SCHEMA, "list_l2distance", {"l1", "l2", nullptr}, "list_distance(l1, l2, 'l2distance')"},
+    {DEFAULT_SCHEMA, "list_dot_product", {"l1", "l2", nullptr}, "list_distance(l1, l2, 'dot_product')"},
+    {DEFAULT_SCHEMA, "list_cosine_distance", {"l1", "l2", nullptr}, "list_distance(l1, l2, 'cosine_distance')"},
+    {DEFAULT_SCHEMA, "list_cosine_similarity", {"l1", "l2", nullptr}, "list_distance(l1, l2, 'cosine_similarity')"}};
+
 static void LoadInternal(DatabaseInstance &instance) {
 	// Register `list_distance`
 	auto list_distance_fun = ListDistanceFun::GetFunction();
 	ExtensionUtil::RegisterFunction(instance, list_distance_fun);
 
 	// Register distance algorithms
-	for (auto distance_fn : ListDistanceAlgorithms::GetAlgorithms()) {
+	for (const auto &distance_fn : ListDistanceAlgorithms::GetAlgorithms()) {
 		ExtensionUtil::RegisterFunction(instance, distance_fn);
+	}
+
+	for (auto macro : vector_macros) {
+		auto info = DefaultFunctionGenerator::CreateInternalMacroInfo(macro);
+		ExtensionUtil::RegisterFunction(instance, *info);
 	}
 }
 
