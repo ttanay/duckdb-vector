@@ -1,0 +1,36 @@
+# name: test/sql/list_distance_inputs.test
+# description: test list_distance inputs
+# group: [list_distance]
+
+# Test for different-sized inputs of list_distance
+
+require vector
+
+# prepare table
+statement ok
+CREATE TABLE vectors(v1 DOUBLE[10], v2 DOUBLE[10]);
+
+statement ok
+INSERT INTO vectors VALUES
+    ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 789.0, 10.0, 11.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 181.0, 10.0, 10.0]),
+    ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 181.0, 10.0, 10.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 789.0, 10.0, 11.0]),
+    ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 181.0, 10.0, 10.0]);
+
+# distance w.r.t a single search vector
+query R
+SELECT list_distance(v1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 785.0, 10.0, 11.0], 'l2distance') FROM vectors;
+----
+4.0
+604.0008278140023
+0.0
+
+# distance for multiple columns of a table
+query R
+SELECT list_euclidean_distance(v1, v2) FROM vectors;
+----
+608.0008223678649
+608.0008223678649
+604.0008278140023
+
+statement ok
+DROP TABLE vectors;

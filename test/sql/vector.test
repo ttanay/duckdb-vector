@@ -93,3 +93,6 @@ query R
 SELECT list_distance([1,2],[2,3], 'cosine_similarity') + list_distance([1,2],[2,3], 'cosine_distance');
 ----
 1
+
+statement ok
+DROP TABLE vectors;
