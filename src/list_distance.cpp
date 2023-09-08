@@ -88,6 +88,7 @@ struct DistanceStateVector {
 	Vector state_vector;
 };
 
+// TODO: Maybe use better names?
 // Note: `search_l` should be a constant vector
 // Take two lists - `l` and `search_l`
 // Compute the distance between the tuples resulting from the cross product `l` and `search_l`
@@ -119,7 +120,7 @@ static void ListDistanceFunction(DataChunk &args, ExpressionState &state, Vector
 
 	D_ASSERT(aggr.function.update);
 
-	// Iterate over `l` list
+	// TODO: Add some sort of an iterator interface for DuckDB's Vector
 	UnifiedVectorFormat l_data;
 	UnifiedVectorFormat search_l_data;
 	l.ToUnifiedFormat(count, l_data);
@@ -144,9 +145,6 @@ static void ListDistanceFunction(DataChunk &args, ExpressionState &state, Vector
 	Vector state_vector_update = Vector(LogicalType::POINTER);
 	auto states_update = FlatVector::GetData<data_ptr_t>(state_vector_update);
 
-	// // Get the first index of the search_l since there won't be any others
-	D_ASSERT(search_l.length == 1);
-
 	for (idx_t i = 0; i < count; i++) {
 		// initialize the state for this list
 		auto state_ptr = state_buffer.get() + size * i;
@@ -154,44 +152,48 @@ static void ListDistanceFunction(DataChunk &args, ExpressionState &state, Vector
 		aggr.function.initialize(states[i]);
 
 		auto l_index = l_data.sel->get_index(i);
+		auto search_l_index = search_l_data.sel->get_index(i);
 		const auto &l_entry = l_entries[l_index];
-		// D_ASSERT(l_entry.length == search_l_entry.length);
+		const auto &search_l_entry = search_l_entries[search_l_index];
+		D_ASSERT(l_entry.length == search_l_entry.length);
 
 		// nothing to do for this list
-		if (!l_data.validity.RowIsValid(l_index)) {
+		if (!l_data.validity.RowIsValid(l_index) || !search_l_data.validity.RowIsValid(search_l_index)) {
 			result_validity.SetInvalid(i);
 			continue;
 		}
-		if (l_entry.length == 0)
+		if (l_entry.length == 0 || search_l_entry.length == 0)
 			continue;
 
 		SelectionVector l_sel_vector(STANDARD_VECTOR_SIZE);
-		// SelectionVector search_l_sel_vector(STANDARD_VECTOR_SIZE);
+		SelectionVector search_l_sel_vector(STANDARD_VECTOR_SIZE);
 
 		// Assumes that that all vectors are of the same length/size
 		idx_t states_idx = 0;
-		// A selection index: 0..l_entry.length; value of selection index is updated to the latest values
-		// B selection index: 0..l_entry.length; value of selection index is the same first l_entry.length vectors
+		// Iterate over both lists to compute the distance
 		for (idx_t j = 0; j < l_entry.length; j++) {
 			if (states_idx == STANDARD_VECTOR_SIZE) {
 				// Do the update and reset the states_idx
 				Vector l_slice(l_child, l_sel_vector, states_idx);
-				Vector inputs[] = {l_slice, search_l_child};
+				Vector search_l_slice(search_l_child, search_l_sel_vector, states_idx);
+				Vector inputs[] = {l_slice, search_l_slice};
 				aggr.function.update(inputs, aggr_input_data, 2, state_vector_update, states_idx);
 
 				states_idx = 0;
 			}
 
-			idx_t actual_idx = l_child_data.sel->get_index(l_entry.offset + j);
-			l_sel_vector.set_index(states_idx, actual_idx);
-			// search_l_sel_vector.set_index(states_idx, actual_idx);
+			idx_t l_actual_idx = l_child_data.sel->get_index(l_entry.offset + j);
+			idx_t search_l_actual_idx = search_l_child_data.sel->get_index(search_l_entry.offset + j);
+			l_sel_vector.set_index(states_idx, l_actual_idx);
+			search_l_sel_vector.set_index(states_idx, search_l_actual_idx);
 			states_update[states_idx] = state_ptr;
 			states_idx++;
 		}
 
 		if (states_idx != 0) {
 			Vector l_slice(l_child, l_sel_vector, states_idx);
-			Vector inputs[] = {l_slice, search_l_child};
+			Vector search_l_slice(search_l_child, search_l_sel_vector, states_idx);
+			Vector inputs[] = {l_slice, search_l_slice};
 			aggr.function.update(inputs, aggr_input_data, 2, state_vector_update, states_idx);
 		}
 	}
