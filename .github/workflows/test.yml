@@ -1,0 +1,20 @@
+
+name: tests
+on: [push, pull_request]
+jobs:
+  tests:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install required ubuntu packages
+        run: |
+          apt-get update -y -qq
+          apt-get install -y -qq software-properties-common build-essential git gcc make
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+
+      - name: Test
+        run: |
+          make test
